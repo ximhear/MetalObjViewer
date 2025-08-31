@@ -6,8 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		ECBDDD022E64A8FC00C285BB /* README.markdown in Resources */ = {isa = PBXBuildFile; fileRef = ECBDDD012E64A8FC00C285BB /* README.markdown */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		ECBDDCF12E64A86A00C285BB /* MetalObjViewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalObjViewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		ECBDDD012E64A8FC00C285BB /* README.markdown */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.markdown; sourceTree = "<group>"; };
+		ECBDDD0F2E64CA4A00C285BB /* MATRIX_PIPELINE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MATRIX_PIPELINE.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -32,6 +38,8 @@
 		ECBDDCE82E64A86A00C285BB = {
 			isa = PBXGroup;
 			children = (
+				ECBDDD0F2E64CA4A00C285BB /* MATRIX_PIPELINE.md */,
+				ECBDDD012E64A8FC00C285BB /* README.markdown */,
 				ECBDDCF32E64A86A00C285BB /* MetalObjViewer */,
 				ECBDDCF22E64A86A00C285BB /* Products */,
 			);
@@ -109,6 +117,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ECBDDD022E64A8FC00C285BB /* README.markdown in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
