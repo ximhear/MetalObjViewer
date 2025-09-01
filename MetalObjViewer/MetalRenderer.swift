@@ -43,6 +43,7 @@ class MetalRenderer: NSObject, MTKViewDelegate {
     private var device: MTLDevice
     private var commandQueue: MTLCommandQueue
     private var renderPipelineState: MTLRenderPipelineState?
+    private var depthStencilState: MTLDepthStencilState?
     // uniformBuffer removed - now each object has its own
     
     // Multiple objects support
@@ -104,7 +105,17 @@ class MetalRenderer: NSObject, MTKViewDelegate {
             fatalError("Failed to create render pipeline state: \(error)")
         }
         
+        setupDepthStencilState()
+        
         // No global uniform buffer needed - each object has its own
+    }
+    
+    private func setupDepthStencilState() {
+        let depthStencilDescriptor = MTLDepthStencilDescriptor()
+        depthStencilDescriptor.depthCompareFunction = .lessEqual
+        depthStencilDescriptor.isDepthWriteEnabled = true
+        
+        depthStencilState = device.makeDepthStencilState(descriptor: depthStencilDescriptor)
     }
     
     func loadModel(vertices: [Vertex]) {
@@ -147,6 +158,11 @@ class MetalRenderer: NSObject, MTKViewDelegate {
         updateViewMatrix()
         
         renderEncoder.setRenderPipelineState(renderPipelineState)
+        
+        // Set depth stencil state for depth testing
+        if let depthStencilState = depthStencilState {
+            renderEncoder.setDepthStencilState(depthStencilState)
+        }
         
         // Left-handed coordinate system: cull back faces with clockwise winding
         renderEncoder.setCullMode(.back)
