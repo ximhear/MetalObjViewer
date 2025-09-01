@@ -127,12 +127,12 @@ class MetalRenderer: NSObject, MTKViewDelegate {
         
         // Add second object at different position for testing
         var secondObject = RenderObject(vertices: Array(vertices), name: "Object_\(renderObjects.count)", device: device)
-        secondObject.translation = simd_float3(0.5, 0.0, 0)  // Right and slightly up
+        secondObject.translation = simd_float3(2.5, 0.0, 0)  // Right and slightly up
         renderObjects.append(secondObject)
         
         // Add third object for better visibility
         var thirdObject = RenderObject(vertices: Array(vertices), name: "Object_\(renderObjects.count)", device: device)
-        thirdObject.translation = simd_float3(-0.5, -0.0, 0.0)  // Left, down, and slightly forward
+        thirdObject.translation = simd_float3(-2.5, -0.0, 0.0)  // Left, down, and slightly forward
         renderObjects.append(thirdObject)
         
         print("Created \(renderObjects.count) objects total")
@@ -200,7 +200,7 @@ class MetalRenderer: NSObject, MTKViewDelegate {
         let rotationMatrix = simd_float4x4(cameraRotation)
         
         // Initial camera position (before rotation) - looking down the Z axis
-        let initialPosition = simd_float3(0, 0, cameraRadius)
+        let initialPosition = simd_float3(0, 0, -cameraRadius)
         
         // Rotate the camera position around the origin
         let rotatedPosition = rotationMatrix * simd_float4(initialPosition, 1.0)
@@ -224,7 +224,7 @@ class MetalRenderer: NSObject, MTKViewDelegate {
         let rotationMatrix = simd_float4x4(object.rotation)
         let modelMatrix = translationMatrix * rotationMatrix
         
-        let inverseModelMatrix = modelMatrix.inverse
+        let inverseModelMatrix = (viewMatrix * modelMatrix).inverse
         let normalMatrix = simd_float3x3(
             simd_float3(inverseModelMatrix.columns.0.x, inverseModelMatrix.columns.0.y, inverseModelMatrix.columns.0.z),
             simd_float3(inverseModelMatrix.columns.1.x, inverseModelMatrix.columns.1.y, inverseModelMatrix.columns.1.z),
@@ -236,7 +236,7 @@ class MetalRenderer: NSObject, MTKViewDelegate {
             viewMatrix: viewMatrix,
             projectionMatrix: projectionMatrix,
             normalMatrix: normalMatrix,
-            lightDirection: normalize(simd_float3(0, 0, 1)),
+            lightDirection: normalize(simd_float3(0, 0, 2)),
             lightColor: simd_float3(1, 1, 1)
         )
         
@@ -252,7 +252,7 @@ class MetalRenderer: NSObject, MTKViewDelegate {
         let sensitivity: Float = 0.005
         
         // Convert screen delta to rotation angles
-        let rotationX = deltaY * sensitivity   // Vertical drag rotates around X axis
+        let rotationX = -deltaY * sensitivity   // Vertical drag rotates around X axis
         let rotationY = deltaX * sensitivity   // Horizontal drag rotates around Y axis
         
         // Get current rotation matrix and vectors
@@ -376,5 +376,17 @@ extension simd_float4x4 {
     
     var transpose: simd_float4x4 {
         return simd_transpose(self)
+    }
+}
+
+
+extension simd_float4x4 {
+    var rotationOnly: simd_float4x4 {
+        return simd_float4x4(
+            simd_float4(columns.0.x, columns.0.y, columns.0.z, 0),
+            simd_float4(columns.1.x, columns.1.y, columns.1.z, 0),
+            simd_float4(columns.2.x, columns.2.y, columns.2.z, 0),
+            simd_float4(0, 0, 0, 1)
+        )
     }
 }
