@@ -168,6 +168,121 @@ The camera system uses quaternion-based trackball rotation for intuitive 3D navi
 
 For detailed trackball rotation implementation, see `TrackballRotation.md`.
 
+### Detailed Explanation of Trackball Rotation
+
+#### Core Concept
+Trackball rotation simulates rotating a transparent sphere with your hand, providing intuitive 3D camera control.
+
+#### Two Rotation Axes
+1. **Horizontal Drag (deltaX)**: Rotates around world Y-axis (Yaw)
+2. **Vertical Drag (deltaY)**: Rotates around camera's local X-axis/Right vector (Pitch)
+
+#### Why Different Axes?
+
+**Y-axis Rotation (Horizontal Drag)**
+```swift
+let qy = simd_quatf(angle: rotationY, axis: simd_float3(0, 1, 0))
+```
+- Always uses world Y-axis (0, 1, 0)
+- Reason: Horizontal dragging should maintain "up" direction while looking left/right
+- Natural behavior like a standing person looking around
+
+**X-axis Rotation (Vertical Drag)**
+```swift
+let rotationMatrix = simd_float4x4(cameraRotation)
+let rightVector = simd_float3(rotationMatrix.columns.0.x, 
+                              rotationMatrix.columns.0.y, 
+                              rotationMatrix.columns.0.z)
+let qx = simd_quatf(angle: rotationX, axis: rightVector)
+```
+- Uses camera's current Right vector
+- Reason: Up/down dragging should always rotate relative to screen orientation
+
+#### Understanding Right and Up Vectors
+
+**Right Vector (Right Direction)**
+```
+Rotation Matrix Columns:
+[Rx]   [Ux]   [Fx]   [Tx]
+[Ry]   [Uy]   [Fy]   [Ty]
+[Rz]   [Uz]   [Fz]   [Tz]
+[0 ]   [0 ]   [0 ]   [1 ]
+ ↑      ↑      ↑      ↑
+Right   Up   Forward Translation
+```
+
+Why first column is Right vector:
+- Rotation matrix represents transformation of basis vectors
+- Column 1: X-axis basis (1,0,0) transformed = Right direction
+- Column 2: Y-axis basis (0,1,0) transformed = Up direction  
+- Column 3: Z-axis basis (0,0,1) transformed = Forward direction
+
+**Up Vector (Up Direction)**
+In View Matrix calculation, Up vector is also rotated:
+```swift
+let initialUp = simd_float3(0, 1, 0)
+let rotatedUp = rotationMatrix * simd_float4(initialUp, 0.0)
+```
+- Maintains correct orientation when camera tilts
+
+#### Importance of Rotation Order
+
+```swift
+cameraRotation = qy * qx * cameraRotation
+```
+
+Order matters because:
+1. **qy (Y-axis rotation)**: Applied first in world space
+2. **qx (X-axis rotation)**: Applied in local space
+3. **cameraRotation**: Accumulated with existing rotation
+
+Why this order:
+- Y rotation first ensures consistent horizontal rotation
+- X rotation after applies up/down relative to current view
+- Reverse order would cause unintuitive mixed rotations
+
+#### Solving Gimbal Lock
+
+**Problem**: 
+- Euler angles can cause axes to align at certain angles
+- Example: After 90° X rotation, Y and Z axes produce same effect
+
+**Solution**:
+1. **Quaternions**: 4D representation prevents gimbal lock
+2. **Dynamic Axis Calculation**: Right vector computed from current rotation
+3. **Normalization**: `simd_normalize(cameraRotation)` prevents numerical drift
+
+#### Practical Examples
+
+**Scenario 1: Looking Forward**
+- Right vector = (1, 0, 0) - pure X-axis
+- Drag up → Rotate around X-axis → Look up/down
+
+**Scenario 2: Looking 90° Left**  
+- Right vector ≈ (0, 0, -1) - Z-axis direction
+- Drag up → Rotate around transformed Right vector → Still screen-relative up/down
+
+**Scenario 3: Looking Up**
+- Right vector remains horizontal
+- Stable rotation continues (no gimbal lock)
+
+#### Sensitivity Control
+```swift
+let sensitivity: Float = 0.005
+```
+- Converts pixel movement to radian angles
+- Lower value = more precise control
+- Higher value = faster rotation
+
+#### Summary
+The trackball rotation system's key principles:
+1. **Horizontal rotation**: Always uses world Y-axis (consistent left/right)
+2. **Vertical rotation**: Uses camera's Right vector (screen-relative up/down)
+3. **Quaternions**: Prevent gimbal lock and ensure smooth rotation
+4. **Dynamic axis calculation**: Rotation axes match current camera orientation
+
+This provides intuitive and predictable camera control regardless of viewing direction.
+
 ## 6. Shader Integration
 
 In the vertex shader (Shaders.metal), matrices are applied in sequence:
