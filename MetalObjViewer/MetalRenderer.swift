@@ -255,20 +255,20 @@ class MetalRenderer: NSObject, MTKViewDelegate {
         let rotationX = deltaY * sensitivity   // Vertical drag rotates around X axis
         let rotationY = deltaX * sensitivity   // Horizontal drag rotates around Y axis
         
-        // For proper trackball rotation:
-        // - Horizontal drags always rotate around world Y axis
-        // - Vertical drags rotate around the camera's local X axis (right vector)
-        
-        // Y rotation is always around world up
-        let qy = simd_quatf(angle: rotationY, axis: simd_float3(0, 1, 0))
-        
-        // For X rotation, we need the camera's right vector
-        // Get it from the current rotation matrix
+        // Get current rotation matrix and vectors
         let rotationMatrix = simd_float4x4(cameraRotation)
-        // The right vector is the first column of the rotation matrix
         let rightVector = simd_float3(rotationMatrix.columns.0.x, rotationMatrix.columns.0.y, rotationMatrix.columns.0.z)
+        let upVector = simd_float3(rotationMatrix.columns.1.x, rotationMatrix.columns.1.y, rotationMatrix.columns.1.z)
         
-        // Create X rotation around the camera's right vector
+        // Check if camera is upside down by comparing up vector with world up
+        let worldUp = simd_float3(0, 1, 0)
+        let upDot = dot(upVector, worldUp)
+        
+        // If camera is upside down (up dot < 0), invert Y rotation to maintain intuitive drag direction
+        let adjustedRotationY = upDot < 0 ? -rotationY : rotationY
+        
+        // Create rotations
+        let qy = simd_quatf(angle: adjustedRotationY, axis: simd_float3(0, 1, 0))
         let qx = simd_quatf(angle: rotationX, axis: rightVector)
         
         // Apply rotations: first Y (world space), then X (local space)
