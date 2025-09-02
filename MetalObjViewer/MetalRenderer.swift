@@ -252,7 +252,11 @@ class MetalRenderer: NSObject, MTKViewDelegate {
         let sensitivity: Float = 0.005
         
         // Convert screen delta to rotation angles
+#if os(iOS)
+        let rotationX = deltaY * sensitivity   // Vertical drag rotates around X axis
+#else
         let rotationX = -deltaY * sensitivity   // Vertical drag rotates around X axis
+#endif
         let rotationY = deltaX * sensitivity   // Horizontal drag rotates around Y axis
         
         // Get current rotation matrix and vectors

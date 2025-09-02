@@ -44,7 +44,11 @@ class TextureManager {
             mipmapped: false
         )
         textureDescriptor.usage = [.shaderRead]
-        textureDescriptor.storageMode = .managed
+        #if os(iOS)
+            textureDescriptor.storageMode = .private
+        #else
+            textureDescriptor.storageMode = .managed
+        #endif
         
         guard let texture = device.makeTexture(descriptor: textureDescriptor) else {
             return nil
