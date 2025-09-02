@@ -261,14 +261,14 @@ class MetalRenderer: NSObject, MTKViewDelegate {
         let upVector = simd_float3(rotationMatrix.columns.1.x, rotationMatrix.columns.1.y, rotationMatrix.columns.1.z)
         
         // Check if camera is upside down by comparing up vector with world up
-        let worldUp = simd_float3(0, 1, 0)
-        let upDot = dot(upVector, worldUp)
+//        let worldUp = simd_float3(0, 1, 0)
+//        let upDot = dot(upVector, worldUp)
         
         // If camera is upside down (up dot < 0), invert Y rotation to maintain intuitive drag direction
-        let adjustedRotationY = upDot < 0 ? -rotationY : rotationY
+//        let adjustedRotationY = upDot < 0 ? -rotationY : rotationY
         
         // Create rotations
-        let qy = simd_quatf(angle: adjustedRotationY, axis: simd_float3(0, 1, 0))
+        let qy = simd_quatf(angle: rotationY, axis: upVector)
         let qx = simd_quatf(angle: rotationX, axis: rightVector)
         
         // Apply rotations: first Y (world space), then X (local space)
